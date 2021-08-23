@@ -1,4 +1,4 @@
-package com.epam.task6004;
+package com.epam.task6004.model;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,29 +28,27 @@ public class Ship implements Runnable {
         tookThePortTheShip = new AtomicBoolean(false);
     }
 
-    public void sailToThePort() throws InterruptedException {
-        while (!tookThePortTheShip.get()) {
-            tookThePortTheShip.set(port.tookShip(this));
-        }
+    void sailToThePort() throws InterruptedException {
+        tookThePortTheShip.set(port.tookShip(this));
     }
 
-    public void sailOutOfThePort() {
+    void sailOutOfThePort() {
         System.out.println("Ship #" + id + " sailed away.");
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 
-    public int getCapacity() {
+    int getCapacity() {
         return capacity;
     }
 
-    public int getNumberOfContainers() {
+    int getNumberOfContainers() {
         return numberOfContainers;
     }
 
-    public void setNumberOfContainers(int numberOfContainers) {
+    void setNumberOfContainers(int numberOfContainers) {
         this.numberOfContainers = numberOfContainers;
     }
 
@@ -65,7 +63,9 @@ public class Ship implements Runnable {
     @Override
     public void run() {
         try {
-            sailToThePort();
+            while (!tookThePortTheShip.get()) {
+                sailToThePort();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

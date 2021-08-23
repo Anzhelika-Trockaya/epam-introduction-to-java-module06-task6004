@@ -1,4 +1,4 @@
-package com.epam.task6004;
+package com.epam.task6004.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,7 +13,30 @@ public class ShipCreator implements Runnable {
         resultNumberOfContainers = new AtomicInteger(port.getRealNumberOfContainers());
     }
 
-    public Ship createShip() {
+    @Override
+    public void run() {
+        Ship currentShip;
+        for (int i = 0; i < numberOfShip - 1; i++) {
+            currentShip = createShip();
+            changeResultNumberOfContainers(currentShip);
+            new Thread(currentShip).start();
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        currentShip = createLastShip();
+        new Thread(currentShip).start();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Ship createShip() {
         if (resultNumberOfContainers.get() >= port.getCapacity()) {
             return createEmptyShip();
         } else if (resultNumberOfContainers.get() <= 0) {
@@ -42,38 +65,16 @@ public class ShipCreator implements Runnable {
         return new Ship(port, capacity, capacity);
     }
 
-    @Override
-    public void run() {
-        Ship currentShip;
-        for (int i = 0; i < numberOfShip - 1; i++) {
-            currentShip = createShip();
-            changeResultNumberOfContainers(currentShip);
-            new Thread(currentShip).start();
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            createLastShip();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void createLastShip() throws InterruptedException {
+    private Ship createLastShip() {
         Ship lastShip;
-        if (resultNumberOfContainers.get() >= 2600 && resultNumberOfContainers.get() <= 7400) {
+        if (resultNumberOfContainers.get() >= 2500 && resultNumberOfContainers.get() <= 7500) {
             lastShip = createRandomShip();
-        } else if (resultNumberOfContainers.get() < 2600) {
-            lastShip = createFullShip();
+        } else if (resultNumberOfContainers.get() < 2500) {
+            lastShip = new Ship(port, 2500, 2500);
         } else {
-            lastShip = createEmptyShip();
+            lastShip = new Ship(port, 2500, 0);
         }
-        new Thread(lastShip).start();
-        Thread.sleep(1000);
+        return lastShip;
     }
 
     private void changeResultNumberOfContainers(Ship currentShip) {

@@ -1,4 +1,4 @@
-package com.epam.task6004;
+package com.epam.task6004.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,7 +26,7 @@ public class Port {
         return realNumberOfContainers.get();
     }
 
-    public void processShip(Ship ship) throws InterruptedException {
+    private void processShip(Ship ship) throws InterruptedException {
         if (ship.getNumberOfContainers() > 0) {
             unloadShip(ship);
         } else {
@@ -36,12 +36,12 @@ public class Port {
         sendOutTheShip(ship);
     }
 
-    public synchronized boolean isPossibleToTakeTheShip(Ship ship) {
-        return hasFreePiers() && ship.getNumberOfContainers() <= numberOfMissingContainers()
-                && (ship.getNumberOfContainers() != 0 || this.prospectiveNumberOfContainers.get() != 0);
+    private synchronized boolean isPossibleToTakeTheShip(Ship ship) {
+        return hasFreePiers() && ship.getNumberOfContainers() <= (capacity - prospectiveNumberOfContainers.get())
+                && (ship.getNumberOfContainers() != 0 || this.prospectiveNumberOfContainers.get() >= ship.getCapacity());
     }
 
-    public boolean tookShip(Ship ship) throws InterruptedException {
+    boolean tookShip(Ship ship) throws InterruptedException {
         synchronized (this) {
             if (isPossibleToTakeTheShip(ship)) {
                 if (ship.getNumberOfContainers() > 0) {
@@ -58,19 +58,19 @@ public class Port {
         return true;
     }
 
-    public synchronized void takeTheShipToAFreePier(Ship ship) throws InterruptedException {
+    private synchronized void takeTheShipToAFreePier(Ship ship) throws InterruptedException {
         for (Pier pier : piers) {
             if (pier.isFree()) {
                 pier.takeTheShip(ship);
                 Thread.sleep(1000);
-                System.out.println("Ship #" + ship.getId() + " -> pier №" + pier.getId());
+                System.out.println(" - - - Pier №" + pier.getId() + " <- Ship #" + ship.getId() + " - - -");
                 return;
             }
         }
         throw new RuntimeException("All piers are not free!");
     }
 
-    public void sendOutTheShip(Ship ship) {
+    private void sendOutTheShip(Ship ship) {
         for (Pier pier : piers) {
             if (pier.getShip() != null && pier.getShip().equals(ship)) {
                 pier.sendTheShip();
@@ -80,50 +80,45 @@ public class Port {
         throw new RuntimeException("Ship not found!");
     }
 
-    public void unloadShip(Ship ship) throws InterruptedException {
+    private void unloadShip(Ship ship) throws InterruptedException {
         int shipNumberOfContainers = ship.getNumberOfContainers();
-        if (this.realNumberOfContainers.get() + shipNumberOfContainers <= capacity) {
-            System.out.println("Ship #" + ship.getId() + " started unload. Number of containers = "
-                    + shipNumberOfContainers + ".");
-            Thread.sleep(3000);
-            this.realNumberOfContainers.getAndAdd(shipNumberOfContainers);
-            ship.setNumberOfContainers(0);
-            System.out.println("Ship #" + ship.getId() + " ended unload. Number of containers = "
-                    + ship.getNumberOfContainers() + "."
-                    + "\n\t\t- Unloaded " + shipNumberOfContainers + " containers.\t\t\tPorts number of containers = "
-                    + realNumberOfContainers.get());
+        if (shipNumberOfContainers <= capacity - realNumberOfContainers.get()) {
+            synchronized (realNumberOfContainers) {
+                System.out.println("Ship #" + ship.getId() + " started unload. Number of containers = "
+                        + shipNumberOfContainers + ".");
+                Thread.sleep(3000);
+                this.realNumberOfContainers.getAndAdd(shipNumberOfContainers);
+                ship.setNumberOfContainers(0);
+                System.out.println("Ship #" + ship.getId() + " ended unload. Number of containers = "
+                        + ship.getNumberOfContainers() + "."
+                        + "\n\t\t- Unloaded " + shipNumberOfContainers + " containers.             "
+                        + "Ports number of containers = " + realNumberOfContainers.get());
+            }
         } else {
             Thread.sleep(100);
             unloadShip(ship);
         }
     }
 
-    public void loadShip(Ship ship) throws InterruptedException {
-        if (this.realNumberOfContainers.get() > 0) {
-            System.out.println("Ship #" + ship.getId() + " started load. Capacity = " + ship.getCapacity());
-            Thread.sleep(3000);
-            if (this.realNumberOfContainers.get() >= ship.getCapacity()) {
+    private void loadShip(Ship ship) throws InterruptedException {
+        if (this.realNumberOfContainers.get() >= ship.getCapacity()) {
+            synchronized (realNumberOfContainers) {
+                System.out.println("Ship #" + ship.getId() + " started load. Capacity = " + ship.getCapacity());
+                Thread.sleep(3000);
                 this.realNumberOfContainers.getAndAdd(-ship.getCapacity());
                 ship.setNumberOfContainers(ship.getCapacity());
-            } else {
-                ship.setNumberOfContainers(this.realNumberOfContainers.get());
-                this.realNumberOfContainers.set(0);
+                System.out.println("Ship #" + ship.getId() + " ended load. Capacity = "
+                        + ship.getCapacity() + "."
+                        + "\n\t\t - Loaded " + ship.getNumberOfContainers() + " containers.              "
+                        + "Ports number of containers = " + realNumberOfContainers.get());
             }
-            System.out.println("Ship #" + ship.getId() + " ended load. Number of containers = "
-                    + ship.getNumberOfContainers() + "."
-                    + "\n\t\t - Loaded " + ship.getNumberOfContainers() + " containers.  \t\t\tPorts number of containers = "
-                    + realNumberOfContainers.get());
         } else {
             Thread.sleep(100);
             loadShip(ship);
         }
     }
 
-    public synchronized int numberOfMissingContainers() {
-        return capacity - prospectiveNumberOfContainers.get();
-    }
-
-    public synchronized boolean hasFreePiers() {
+    private synchronized boolean hasFreePiers() {
         for (Pier pier : piers) {
             if (pier.isFree()) {
                 return true;
@@ -133,30 +128,30 @@ public class Port {
     }
 
 
-    public static class Pier {
+    static class Pier {
         private static int currentId = 1;
         private final int id;
         private volatile Ship ship;
 
-        public Pier() {
+        Pier() {
             id = currentId;
             currentId++;
             ship = null;
         }
 
-        public int getId() {
+        int getId() {
             return id;
         }
 
-        public boolean isFree() {
+        boolean isFree() {
             return ship == null;
         }
 
-        public Ship getShip() {
+        Ship getShip() {
             return ship;
         }
 
-        public void takeTheShip(Ship ship) {
+        void takeTheShip(Ship ship) {
             if (this.ship == null) {
                 this.ship = ship;
             } else {
@@ -165,7 +160,7 @@ public class Port {
 
         }
 
-        public void sendTheShip() {
+        void sendTheShip() {
             ship.sailOutOfThePort();
             System.out.println(" - - - Pier №" + id + " is free. - - -");
             ship = null;
