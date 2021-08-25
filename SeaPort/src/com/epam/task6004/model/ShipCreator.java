@@ -84,6 +84,5 @@ public class ShipCreator implements Runnable {
         } else {
             resultNumberOfContainers.getAndAdd(-currentShip.getCapacity());
         }
-
     }
 }
