@@ -1,4 +1,4 @@
-package com.epam.task6004.model;
+package by.epam.task6004.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

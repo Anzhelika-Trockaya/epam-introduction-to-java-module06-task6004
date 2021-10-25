@@ -1,7 +1,7 @@
-package com.epam.task6004.main;
+package by.epam.task6004.main;
 
-import com.epam.task6004.model.Port;
-import com.epam.task6004.model.ShipCreator;
+import by.epam.task6004.model.Port;
+import by.epam.task6004.model.ShipCreator;
 
 //Задание 4. Многопоточность. Порт . Корабли заходят в порт для
 //разгрузки/загрузки контейнеров. Число контейнеров, находящихся в текущий момент
