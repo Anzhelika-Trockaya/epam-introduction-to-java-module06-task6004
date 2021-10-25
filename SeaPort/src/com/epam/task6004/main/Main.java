@@ -12,13 +12,27 @@ import com.epam.task6004.model.ShipCreator;
 
 public class Main {
     public static void main(String[] args) {
-        Port port = new Port(10000, 3, 7000);
+        Port port;
         ShipCreator shipCreator;
+        int portsCapacity;
+        int piersNumber;
+        int portsNumberOfContainer;
+        int numberOfShip;
 
+        portsCapacity = 10000;
+        piersNumber = 3;
+        portsNumberOfContainer = 7000;
+        numberOfShip = 20;
+
+        port = new Port(portsCapacity, piersNumber, portsNumberOfContainer);
+
+        System.out.println("                                                            Ports capacity = "
+                + portsCapacity);
         System.out.println("                                                Ports number of containers = "
                 + port.getRealNumberOfContainers());
 
-        shipCreator = new ShipCreator(port, 20);
+        shipCreator = new ShipCreator(port, numberOfShip);
         shipCreator.run();
+
     }
 }
